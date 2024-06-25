@@ -29,31 +29,36 @@ module.exports.handleUpload = (request, reply) => {
         console.error(err)
         reply(err)
       } else {
-        unoconv.convert(fileNameTempOriginal, convertToFormat, (err, result) => {
-          if (err) {
-            console.error(err)
-            fs.unlink(fileNameTempOriginal, error => {
-              if (error) {
-                console.error(error)
-              } else {
-                console.log(`${fileNameTempOriginal} deleted`)
-              }
-            })
-            reply(err)
-          } else {
-            console.log('finished converting')
-            reply(result)
-              .on('finish', () => {
-                fs.unlink(fileNameTempOriginal, error => {
-                  if (error) {
-                    console.error(error)
-                  } else {
-                    console.log(`${fileNameTempOriginal} deleted`)
-                  }
-                })
+        (function processConvert(retries = 0) {
+          unoconv.convert(fileNameTempOriginal, convertToFormat, (err, result) => {
+            if (err && retries < 3) {
+              console.error(`error converting, retrying ${retries + 1}`)
+              processConvert(retries + 1)
+            } else if (err) {
+              console.error(err)
+              fs.unlink(fileNameTempOriginal, error => {
+                if (error) {
+                  console.error("4", error)
+                } else {
+                  console.log(`${fileNameTempOriginal} deleted`)
+                }
               })
-          }
-        })
+              reply(err)
+            } else {
+              console.log('finished converting')
+              reply(result)
+                .on('finish', () => {
+                  fs.unlink(fileNameTempOriginal, error => {
+                    if (error) {
+                      console.error(error)
+                    } else {
+                      console.log(`${fileNameTempOriginal} deleted`)
+                    }
+                  })
+                })
+            }
+          })
+        })()
       }
     })
   }
