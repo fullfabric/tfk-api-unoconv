@@ -2,6 +2,7 @@
 
 const fs = require('fs')
 const { v4: uuid } = require('uuid')
+const ps = require('ps-node')
 const unoconv = require('unoconv2')
 const formats = require('../lib/data/formats.json')
 const pkg = require('../package.json')
@@ -81,5 +82,11 @@ module.exports.showVersions = (request, reply) => {
 }
 
 module.exports.healthcheck = (request, reply) => {
-  reply({ uptime: process.uptime() })
+  ps.lookup({ arguments: /unoconv/i, psargs: 'ux' }, (err, resultList) => {
+    if (resultList.length > 0) {
+      reply({ uptime: process.uptime() })
+    } else {
+      reply({ error: 'unoconv not running' }).code(500)
+    }
+  });
 }
