@@ -88,10 +88,12 @@ module.exports.showVersions = (request, reply) => {
 
 module.exports.healthcheck = (request, reply) => {
   ps.lookup({ arguments: /unoconv/i, psargs: 'ux' }, (err, resultList) => {
-    if (resultList.length > 0) {
-      reply({ uptime: process.uptime() })
-    } else {
-      reply({ error: 'unoconv not running' }).code(500)
-    }
+    unoconv.detectSupportedFormats((err) => {
+      if (resultList.length > 0 && !err) {
+        reply({ uptime: process.uptime() })
+      } else {
+        reply({ error: 'unoconv not running' }).code(500)
+      }
+    })
   });
 }
