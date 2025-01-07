@@ -11,6 +11,7 @@ module.exports.handleUpload = (request, reply) => {
   const convertToFormat = request.params.format
   const data = request.payload
   if (data.file) {
+    const startTime = Date.now()
     const nameArray = data.file.hapi.filename.split('.')
     const fileEndingOriginal = nameArray.pop()
     const temporaryName = uuid()
@@ -36,6 +37,7 @@ module.exports.handleUpload = (request, reply) => {
               processConvert(retries + 1)
             } else if (err) {
               console.error(err)
+              console.log('Errored in ' + (Date.now() - startTime) + 'ms')
               fs.unlink(fileNameTempOriginal, error => {
                 if (error) {
                   console.error("4", error)
@@ -45,7 +47,7 @@ module.exports.handleUpload = (request, reply) => {
               })
               reply(err)
             } else {
-              console.log('finished converting')
+              console.log('finished converting in ' + (Date.now() - startTime) + 'ms')
               reply(result)
                 .on('finish', () => {
                   fs.unlink(fileNameTempOriginal, error => {
